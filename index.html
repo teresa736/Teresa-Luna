@@ -164,18 +164,40 @@ async function loadMemories(){
     renderMemories(await r.json());
   }catch(e){document.getElementById('memories-list').innerHTML='<div class="empty-state">Los recuerdos no están disponibles en este momento.</div>';}
 }
-document.getElementById('memory-form').addEventListener('submit',async(e)=>{
+document.getElementById('memory-form').addEventListener('submit', async (e) => {
   e.preventDefault();
-  const status=document.getElementById('form-status');
-  if(!SHEETS_WEB_APP_URL){status.textContent='El libro de recuerdos estará disponible en cuanto se conecte la hoja de Google.';return;}
-  const data=Object.fromEntries(new FormData(e.currentTarget).entries());
-  status.textContent='Enviando…';
-  try{
-    const r=await fetch(SHEETS_WEB_APP_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(data)});
-    if(!r.ok) throw new Error('No se pudo enviar.');
-    e.currentTarget.reset(); status.textContent='Gracias. Tu recuerdo fue recibido y será revisado antes de publicarse.';
-    loadMemories();
-  }catch(err){status.textContent='No pudimos enviar el recuerdo. Inténtalo nuevamente.';}
+
+  const form = e.currentTarget;
+  const status = document.getElementById('form-status');
+  const button = form.querySelector('button[type="submit"]');
+
+  const data = Object.fromEntries(new FormData(form).entries());
+
+  status.textContent = 'Enviando…';
+  button.disabled = true;
+  button.textContent = 'Enviando…';
+
+  try {
+    await fetch(SHEETS_WEB_APP_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: {
+        'Content-Type': 'text/plain;charset=utf-8'
+      },
+      body: JSON.stringify(data)
+    });
+
+    form.reset();
+    status.textContent =
+      'Gracias. Tu recuerdo fue recibido y será revisado antes de publicarse.';
+
+  } catch (error) {
+    status.textContent =
+      'No pudimos enviar el recuerdo. Revisa tu conexión e inténtalo nuevamente.';
+  } finally {
+    button.disabled = false;
+    button.textContent = 'Compartir mi recuerdo';
+  }
 });
 loadMemories();
 </script>
